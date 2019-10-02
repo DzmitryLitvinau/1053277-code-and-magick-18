@@ -98,10 +98,14 @@ setupOpen.addEventListener('keydown', function (evt) {
   }
 });
 
-setupUserName.addEventListener('click', function (evt) {
+setupUserName.addEventListener('keydown', function (evt) {
   if (evt.keyCode === ESC_KEYCODE) {
     document.removeEventListener('keydown', onPopupEscPress);
   }
+});
+
+setupUserName.addEventListener('blur', function () {
+  document.addEventListener('keydown', onPopupEscPress);
 });
 
 setupClose.addEventListener('click', function () {
