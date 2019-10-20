@@ -1,35 +1,55 @@
 'use strict';
 (function () {
-  var WIZARDS_EYES_COLORS = ['black', 'red', 'blue', 'yellow', 'green'];
-  var WIZARS_COAT_COLORS = ['rgb(101, 137, 164)', 'rgb(101, 137, 164)', 'rgb(146, 100, 161)', 'rgb(56, 159, 117)', 'rgb(215, 210, 55)', 'rgb(0, 0, 0)'];
-  var WIZARDS_FIREBALL_COLORS = ['#ee4830', '#30a8ee', '#5ce6c0', '#e848d5', '#e6e848'];
+
   var userDialog = document.querySelector('.setup');
   userDialog.classList.remove('hidden');
+  var coatColor;
+  var eyesColor;
+  var wizards = [];
+  var getRank = function (wizard) {
+    var rank = 0;
 
-  var similarListElement = userDialog.querySelector('.setup-similar-list');
+    if (wizard.colorCoat === coatColor) {
+      rank += 2;
+    }
+    if (wizard.colorEyes === eyesColor) {
+      rank += 1;
+    }
 
-  var similarWizardTemplate = document.querySelector('#similar-wizard-template')
-    .content
-    .querySelector('.setup-similar-item');
-
-  var renderWizard = function (wizard) {
-    var wizardElement = similarWizardTemplate.cloneNode(true);
-
-    wizardElement.querySelector('.setup-similar-label').textContent = wizard.name;
-    wizardElement.querySelector('.wizard-coat').style.fill = wizard.colorCoat;
-    wizardElement.querySelector('.wizard-eyes').style.fill = wizard.colorEyes;
-    return wizardElement;
+    return rank;
   };
 
-  var successHandler = function (wizards) {
-    var fragment = document.createDocumentFragment();
-
-    for (var i = 0; i < 4; i++) {
-      fragment.appendChild(renderWizard(wizards[i]));
+  var namesComparator = function (left, right) {
+    if (left > right) {
+      return 1;
+    } else if (left < right) {
+      return -1;
+    } else {
+      return 0;
     }
-    similarListElement.appendChild(fragment);
+  };
+  var updateWizards = function () {
+    window.render(wizards.sort(function (left, right) {
+      var rankDiff = getRank(right) - getRank(left);
+      if (rankDiff === 0) {
+        rankDiff = namesComparator(left.name, right.name);
+      }
+      return rankDiff;
+    }));
+  };
+  window.wizard.onEyesChange = window.debounce(function (color) {
+    eyesColor = color;
+    updateWizards();
+  });
 
-    userDialog.querySelector('.setup-similar').classList.remove('hidden');
+  window.wizard.onCoatChange = window.debounce(function (color) {
+    coatColor = color;
+    updateWizards();
+  });
+
+  var successHandler = function (data) {
+    wizards = data;
+    updateWizards();
   };
 
   var errorHandler = function (errorMessage) {
@@ -55,40 +75,5 @@
     window.save(new FormData(form), responseHandler, errorHandler);
     evt.preventDefault();
   });
-
-  var setupWizard = document.querySelector('.setup-wizard');
-  var setupCoat = setupWizard.querySelector('.wizard-coat');
-  var setupEyes = setupWizard.querySelector('.wizard-eyes');
-  var setupFireballsWrap = document.querySelector('.setup-fireball-wrap');
-  var setupWizardApperiance = document.querySelector('.setup-wizard-appearance');
-  var setupWizardInputs = setupWizardApperiance.querySelectorAll('input');
-  var setupFireballInput = setupFireballsWrap.querySelector('input');
-
-  var onChangeCoatClick = function (coat, color) {
-    coat.addEventListener('click', function () {
-      coat.style.fill = color[window.util.getRandomIntInclusive(0, color.length - 1)];
-      setupWizardInputs[0].value = coat.style.fill;
-    });
-  };
-
-  onChangeCoatClick(setupCoat, WIZARS_COAT_COLORS);
-
-  var onChangeEyesClick = function (eyes, color) {
-    eyes.addEventListener('click', function () {
-      eyes.style.fill = color[window.util.getRandomIntInclusive(0, color.length - 1)];
-      setupWizardInputs[1].value = eyes.style.fill;
-    });
-  };
-
-  onChangeEyesClick(setupEyes, WIZARDS_EYES_COLORS);
-
-  var onChangeFireballsClick = function (fireballs, color) {
-    fireballs.addEventListener('click', function () {
-      setupFireballInput.value = color[window.util.getRandomIntInclusive(0, color.length - 1)];
-      fireballs.style.backgroundColor = setupFireballInput.value;
-    });
-  };
-
-  onChangeFireballsClick(setupFireballsWrap, WIZARDS_FIREBALL_COLORS);
 
 })();
